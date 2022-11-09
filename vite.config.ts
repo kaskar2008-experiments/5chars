@@ -1,8 +1,7 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  base: '/5chars/dist',
+  base: '/5chars/dist/',
   plugins: [vue()]
 })
