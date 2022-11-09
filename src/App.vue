@@ -198,7 +198,7 @@ header
       justify-content center
 
 footer
-  padding-bottom 20px
+  padding 20px 16px
 
   .keyboard
     display flex
