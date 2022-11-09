@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import GameLogo from './components/GameLogo.vue'
 import words from './words.json';
 
@@ -17,6 +17,8 @@ const currentWord = ref('');
 const guesses = ref<any>([]);
 const myGuess = ref('');
 const canGuess = computed(() => guesses.value.length < 6);
+const isNotAWord = ref(false);
+const charStatuses = ref<Record<string, string>>({});
 
 const addCharGuess = (char: string) => {
   if (myGuess.value.length >= 5) {
@@ -36,10 +38,19 @@ const deleteCharGuess = () => {
 
 currentWord.value = words[getRandomArbitrary(0, words.length - 1)];
 
+watch(myGuess, () => {
+  isNotAWord.value = false;
+});
+
 const doGuess = (window as any).doGuess = (word: string) => {
-  if (!canGuess.value || !word) {
+  if (!canGuess.value || !word || word.length < 5) {
     return;
   }
+
+  // if (!words.includes(word)) {
+  //   isNotAWord.value = true;
+  //   return;
+  // }
 
   const newGuess = {
     word,
@@ -49,19 +60,28 @@ const doGuess = (window as any).doGuess = (word: string) => {
   word.toUpperCase().split('').forEach((char, index) => {
     if (currentWord.value[index] === char) {
       newGuess.info[index] = 'hit';
+      charStatuses.value[char] = newGuess.info[index];
       return;
     }
 
     if (!currentWord.value.includes(char)) {
       newGuess.info[index] = 'wrong';
+      if (!charStatuses.value[char]) {
+        charStatuses.value[char] = newGuess.info[index];
+      }
       return;
     }
 
     if (currentWord.value.includes(char)) {
       newGuess.info[index] = 'miss';
+      if (charStatuses.value[char] !== 'hit') {
+        charStatuses.value[char] = newGuess.info[index];
+      }
       return;
     }
   });
+
+  console.log(charStatuses.value);
 
   guesses.value.push(newGuess);
 
@@ -86,19 +106,26 @@ const getCellClassName = (rindex: number, cindex: number) => {
   main
     .field
       .row(v-for="(row, rindex) in 6")
-        .cell(v-for="(cell, cindex) in 5" :class="getCellClassName(rindex, cindex)")
-          span(v-if="guesses[rindex]") {{ guesses[rindex].word[cindex] }}
-      .row.my-guess
-        .cell(v-for="(cell, cindex) in 5")
-          span {{ myGuess[cindex] }}
+        template(v-for="(cell, cindex) in 5")
+          .cell(v-if="guesses[rindex]" :class="getCellClassName(rindex, cindex)")
+            span {{ guesses[rindex].word[cindex] }}
+
+          .cell(v-else-if="rindex === guesses.length" :class="{ 'non-word': isNotAWord }")
+            span {{ myGuess[cindex] }}
+
+          .cell(v-else)
   footer
     .keyboard(v-if="canGuess")
       .row(v-for="(row, rindex) in keyboard")
         template(v-if="rindex === 2")
           .cell.ok(@click="doGuess(myGuess)") ✓
-        .cell(v-for="char in row" @click="addCharGuess(char)") {{ char }}
+        template(v-for="char in row" :key="char")
+          .cell(@click="addCharGuess(char)" :class="charStatuses[char.toUpperCase()]") {{ char }}
         template(v-if="rindex === 2")
           .cell.delete(@click="deleteCharGuess") ✕
+
+    .result(v-else)
+      .word {{ currentWord }}
 </template>
 
 <style scoped lang="stylus">
@@ -107,11 +134,12 @@ const getCellClassName = (rindex: number, cindex: number) => {
   max-width 500px
   width 100%
   margin 0 auto
-  padding 50px 0
+  padding 20px 0
   box-sizing border-box
   display grid
   grid-template-rows auto 1fr auto
   grid-gap 24px
+  line-height 1
 
 header
   padding 8px
@@ -137,6 +165,10 @@ header
     justify-content center
     text-transform uppercase
 
+    &.non-word
+      border-color red
+      color red
+
     &.wrong,
     &.miss,
     &.hit
@@ -156,27 +188,49 @@ header
     span
       display block
 
-.keyboard
-  display flex
-  flex-direction column
-  gap 10px
+footer
+  padding-bottom 20px
 
-  .row
+  .keyboard
     display flex
-    margin 0 auto
-    gap 3px
+    flex-direction column
+    gap 10px
 
-  .cell
-    border 1px solid #444
-    padding 5px 9px
-    border-radius 5px
+    .row
+      display flex
+      margin 0 auto
+      gap 4px
 
-    &.ok,
-    &.delete
-      border 1px solid rgba(0,0,0,0)
+    .cell
+      box-shadow: 0 0 1px #999;
+      padding 8px
+      border-radius 5px
+      font-size 23px
 
-    &.ok
-      background-color green
-    &.delete
-      background-color red
+      &.wrong
+        background-color #555
+
+      &.miss
+        background-color #fff
+        color black
+
+      &.hit
+        background-color yellow
+        color black
+
+      &.ok,
+      &.delete
+        border 1px solid rgba(0,0,0,0)
+
+      &.ok
+        background-color green
+        padding 8px 12px
+      &.delete
+        background-color red
+        padding 8px 12px
+
+  .result
+    text-align center
+    font-size 50px
+    color green
 </style>
