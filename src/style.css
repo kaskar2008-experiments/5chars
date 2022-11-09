@@ -13,6 +13,15 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+
+  --wrong-char-bg: #555;
+  --wrong-char-color: #fff;
+
+  --miss-char-bg: #fff;
+  --miss-char-color: #000;
+
+  --hit-char-bg: yellow;
+  --hit-char-color: #000;
 }
 
 #app {

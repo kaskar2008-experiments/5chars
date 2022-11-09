@@ -1,13 +1,28 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import GameLogo from './components/GameLogo.vue'
+import { computed, ref, watch, shallowRef, defineAsyncComponent } from 'vue';
+import GameLogo from './components/GameLogo.vue';
+import Modal from './components/Modal.vue';
 import words from './words.json';
+
+const rulesModal = () => import('./components/Rules.vue');
+
+const currentModal = shallowRef<(() => Promise<any>) | null>(null);
+const modalTitle = ref('');
 
 const keyboard = [
   ['й','ц','у','к','е','н','г','ш','щ','з','х','ъ'],
   ['ф','ы','в','а','п','р','о','л','д','ж','э'],
   ['я','ч','с','м','и','т','ь','б','ю']
 ]
+
+const onModalClose = () => {
+  currentModal.value = null;
+}
+
+const openRulesModal = () => {
+  modalTitle.value = 'Правила игры';
+  currentModal.value = defineAsyncComponent(rulesModal);
+}
 
 function getRandomArbitrary(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -95,8 +110,6 @@ const doGuess = (window as any).doGuess = (word: string) => {
     }
   });
 
-  console.log(charStatuses.value);
-
   guesses.value.push(newGuess);
 
   myGuess.value = '';
@@ -114,9 +127,13 @@ const getCellClassName = (rindex: number, cindex: number) => {
 </script>
 
 <template lang="pug">
+modal(v-if="currentModal" @close="onModalClose" :title="modalTitle")
+  component(:is="currentModal")
 .app
   header
     game-logo(text="5chars")
+    .actions
+      button(@click="openRulesModal") ?
   main
     .field
       .row(v-for="(row, rindex) in 6")
@@ -155,9 +172,23 @@ const getCellClassName = (rindex: number, cindex: number) => {
   display grid
   grid-gap 24px
   line-height 1
+  position relative
+  z-index 1
 
 header
   padding 8px
+  display flex
+  justify-content space-between
+  align-items center
+
+  .actions
+    button
+      padding 8px 13px
+      border none
+      background-color #ccc
+      cursor pointer
+      border-radius 5px
+      color black
 
 .field
   padding 8px
@@ -191,15 +222,16 @@ header
       border none
 
     &.wrong
-      background-color #555
+      background-color var(--wrong-char-bg)
+      color var(--wrong-char-color)
 
     &.miss
-      background-color #fff
-      color black
+      background-color var(--miss-char-bg)
+      color var(--miss-char-color)
 
     &.hit
-      background-color yellow
-      color black
+      background-color var(--hit-char-bg)
+      color var(--hit-char-color)
 
     span
       display flex
@@ -230,7 +262,7 @@ footer
 
     .cell
       box-shadow: 0 0 1px #999;
-      // padding 8px
+      cursor pointer
       border-radius 5px
       font-size 24px
       width 12%
