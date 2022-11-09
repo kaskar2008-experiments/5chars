@@ -71,7 +71,7 @@ watch(myGuess, () => {
   isNotAWord.value = false;
 });
 
-const doGuess = (window as any).doGuess = (word: string) => {
+const doGuess = (word: string) => {
   if (!canGuess.value || !word || word.length < 5) {
     return;
   }
