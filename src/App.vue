@@ -13,6 +13,20 @@ function getRandomArbitrary(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+window.addEventListener('keydown', (event: KeyboardEvent) => {
+  if (event.key.match(/[а-я]/)) {
+    addCharGuess(event.key);
+  }
+
+  if (event.key === 'Backspace') {
+    deleteCharGuess();
+  }
+
+  if (event.key === 'Enter') {
+    doGuess(myGuess.value);
+  }
+}, true);
+
 const currentWord = ref('');
 const guesses = ref<any>([]);
 const myGuess = ref('');
@@ -47,10 +61,10 @@ const doGuess = (window as any).doGuess = (word: string) => {
     return;
   }
 
-  // if (!words.includes(word)) {
-  //   isNotAWord.value = true;
-  //   return;
-  // }
+  if (!words.includes(word.toUpperCase())) {
+    isNotAWord.value = true;
+    return;
+  }
 
   const newGuess = {
     word,
@@ -133,9 +147,9 @@ const getCellClassName = (rindex: number, cindex: number) => {
 
 <style scoped lang="stylus">
 .app
-  // max-width 460px
-  width 100%
+  width 100vw
   margin 0 auto
+  max-width 560px
   padding 20px 0
   box-sizing border-box
   display grid
