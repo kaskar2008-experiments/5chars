@@ -118,11 +118,14 @@ const getCellClassName = (rindex: number, cindex: number) => {
     .keyboard(v-if="canGuess")
       .row(v-for="(row, rindex) in keyboard")
         template(v-if="rindex === 2")
-          .cell.ok(@click="doGuess(myGuess)") ✓
+          .cell.ok(@click="doGuess(myGuess)")
+            span ✓
         template(v-for="char in row" :key="char")
-          .cell(@click="addCharGuess(char)" :class="charStatuses[char.toUpperCase()]") {{ char }}
+          .cell(@click="addCharGuess(char)" :class="charStatuses[char.toUpperCase()]")
+            span {{ char }}
         template(v-if="rindex === 2")
-          .cell.delete(@click="deleteCharGuess") ✕
+          .cell.delete(@click="deleteCharGuess")
+            span ✕
 
     .result(v-else)
       .word {{ currentWord }}
@@ -130,14 +133,12 @@ const getCellClassName = (rindex: number, cindex: number) => {
 
 <style scoped lang="stylus">
 .app
-  min-height 100vh
-  max-width 500px
+  // max-width 460px
   width 100%
   margin 0 auto
   padding 20px 0
   box-sizing border-box
   display grid
-  grid-template-rows auto 1fr auto
   grid-gap 24px
   line-height 1
 
@@ -164,6 +165,7 @@ header
     align-content center
     justify-content center
     text-transform uppercase
+    position relative
 
     &.non-word
       border-color red
@@ -186,7 +188,14 @@ header
       color black
 
     span
-      display block
+      display flex
+      position absolute
+      left 0
+      top 0
+      right 0
+      bottom 0
+      align-items center
+      justify-content center
 
 footer
   padding-bottom 20px
@@ -200,12 +209,19 @@ footer
       display flex
       margin 0 auto
       gap 4px
+      width 100%
+
+      &:nth-child(2)
+        width 90%
 
     .cell
       box-shadow: 0 0 1px #999;
-      padding 8px
+      // padding 8px
       border-radius 5px
-      font-size 23px
+      font-size 24px
+      width 12%
+      aspect-ratio 1 / 1.2
+      position relative
 
       &.wrong
         background-color #555
@@ -221,13 +237,23 @@ footer
       &.ok,
       &.delete
         border 1px solid rgba(0,0,0,0)
+        aspect-ratio initial
+        padding 8px 12px
 
       &.ok
         background-color green
-        padding 8px 12px
       &.delete
         background-color red
-        padding 8px 12px
+
+      span
+        display flex
+        position absolute
+        left 0
+        top 0
+        right 0
+        bottom 0
+        align-items center
+        justify-content center
 
   .result
     text-align center
