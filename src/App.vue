@@ -54,7 +54,7 @@ const isNotAWord = ref(false);
 const charStatuses = ref<Record<string, string>>({});
 
 const addCharGuess = (char: string) => {
-  if (!canGuess.value || hasGameEnded.value) {
+  if (!canGuess.value || hasGameEnded.value || myGuess.value.length >= 5) {
     return;
   }
 
@@ -76,7 +76,6 @@ const newGame = () => {
   charStatuses.value = {};
   currentWord.value = words[getRandomArbitrary(0, words.length - 1)];
   hasGuessed.value = false;
-  console.log(currentWord.value);
 }
 
 watch(myGuess, () => {
