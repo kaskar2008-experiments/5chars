@@ -45,12 +45,16 @@ window.addEventListener('keydown', (event: KeyboardEvent) => {
 const currentWord = ref('');
 const guesses = ref<any>([]);
 const myGuess = ref('');
+const hasGuessed = ref(false);
 const canGuess = computed(() => guesses.value.length < 6);
+const hasGameEnded = computed(() => {
+  return !canGuess.value || hasGuessed.value;
+});
 const isNotAWord = ref(false);
 const charStatuses = ref<Record<string, string>>({});
 
 const addCharGuess = (char: string) => {
-  if (myGuess.value.length >= 5) {
+  if (!canGuess.value || hasGameEnded.value) {
     return;
   }
 
@@ -58,21 +62,29 @@ const addCharGuess = (char: string) => {
 }
 
 const deleteCharGuess = () => {
-  if (myGuess.value.length === 0) {
+  if (myGuess.value.length === 0 || hasGameEnded.value) {
     return;
   }
 
   myGuess.value = myGuess.value.substring(0, myGuess.value.length - 1);
 }
 
-currentWord.value = words[getRandomArbitrary(0, words.length - 1)];
+const newGame = () => {
+  myGuess.value = '';
+  guesses.value = [];
+  isNotAWord.value = false;
+  charStatuses.value = {};
+  currentWord.value = words[getRandomArbitrary(0, words.length - 1)];
+  hasGuessed.value = false;
+  console.log(currentWord.value);
+}
 
 watch(myGuess, () => {
   isNotAWord.value = false;
 });
 
 const doGuess = (word: string) => {
-  if (!canGuess.value || !word || word.length < 5) {
+  if (!canGuess.value || !word || word.length < 5 || hasGameEnded.value) {
     return;
   }
 
@@ -112,6 +124,10 @@ const doGuess = (word: string) => {
 
   guesses.value.push(newGuess);
 
+  if (word.toUpperCase() === currentWord.value.toUpperCase()) {
+    hasGuessed.value = true;
+  }
+
   myGuess.value = '';
 }
 
@@ -124,6 +140,8 @@ const getCellClassName = (rindex: number, cindex: number) => {
 
   return guess.info[cindex];
 }
+
+newGame();
 </script>
 
 <template lang="pug">
@@ -146,20 +164,26 @@ modal(v-if="currentModal" @close="onModalClose" :title="modalTitle")
 
           .cell(v-else)
   footer
-    .keyboard(v-if="canGuess")
-      .row(v-for="(row, rindex) in keyboard")
-        template(v-if="rindex === 2")
-          .cell.ok(@click="doGuess(myGuess)")
-            span ✓
-        template(v-for="char in row" :key="char")
-          .cell(@click="addCharGuess(char)" :class="charStatuses[char.toUpperCase()]")
-            span {{ char }}
-        template(v-if="rindex === 2")
-          .cell.delete(@click="deleteCharGuess")
-            span ✕
+    template(v-if="!hasGameEnded")
+      .keyboard
+        .row(v-for="(row, rindex) in keyboard")
+          template(v-if="rindex === 2")
+            .cell.ok(@click="doGuess(myGuess)")
+              span ✓
+          template(v-for="char in row" :key="char")
+            .cell(@click="addCharGuess(char)" :class="charStatuses[char.toUpperCase()]")
+              span {{ char }}
+          template(v-if="rindex === 2")
+            .cell.delete(@click="deleteCharGuess")
+              span ✕
 
-    .result(v-else)
-      .word {{ currentWord }}
+    template(v-else)
+      .result(v-if="!canGuess")
+        .word {{ currentWord }}
+
+      .end-game(v-else)
+        .action
+          button(@click="newGame") Играть еще
 </template>
 
 <style scoped lang="stylus">
@@ -245,6 +269,20 @@ header
 
 footer
   padding 20px 16px
+
+  .end-game
+    .action
+      display flex
+      justify-content center
+
+      button
+        background-color #333
+        color yellow
+        border none
+        padding 15px 25px
+        border-radius 8px
+        font-size 24px
+        cursor pointer
 
   .keyboard
     display flex
