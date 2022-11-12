@@ -6,6 +6,20 @@ import words from './words.json';
 
 const rulesModal = () => import('./components/Rules.vue');
 
+const loadData = () => {
+  const data = localStorage.getItem('data') || '';
+
+  return JSON.parse(decodeURIComponent(escape(atob(data) || '{}')));
+}
+
+const saveData = (customData?: string) => {
+  const data = customData !== undefined ? customData : btoa(unescape(encodeURIComponent(JSON.stringify(forLS.value))));
+
+  localStorage.setItem('data', data);
+}
+
+const fromLS = loadData();
+
 const currentModal = shallowRef<(() => Promise<any>) | null>(null);
 const modalTitle = ref('');
 
@@ -42,16 +56,25 @@ window.addEventListener('keydown', (event: KeyboardEvent) => {
   }
 }, true);
 
-const currentWord = ref('');
-const guesses = ref<any>([]);
+const currentWord = ref(fromLS.currentWord || words[getRandomArbitrary(0, words.length - 1)]);
+const guesses = ref<any>(fromLS.guesses || []);
 const myGuess = ref('');
-const hasGuessed = ref(false);
+const hasGuessed = ref(fromLS.hasGuessed || false);
+const charStatuses = ref<Record<string, string>>(fromLS.charStatuses || {});
 const canGuess = computed(() => guesses.value.length < 6);
 const hasGameEnded = computed(() => {
   return !canGuess.value || hasGuessed.value;
 });
 const isNotAWord = ref(false);
-const charStatuses = ref<Record<string, string>>({});
+
+const forLS = computed(() => {
+  return {
+    currentWord: currentWord.value,
+    guesses: guesses.value,
+    hasGuessed: hasGuessed.value,
+    charStatuses: charStatuses.value,
+  };
+});
 
 const addCharGuess = (char: string) => {
   if (!canGuess.value || hasGameEnded.value || myGuess.value.length >= 5) {
@@ -69,13 +92,17 @@ const deleteCharGuess = () => {
   myGuess.value = myGuess.value.substring(0, myGuess.value.length - 1);
 }
 
-const newGame = () => {
+const newGame = (fromCache = false) => {
   myGuess.value = '';
-  guesses.value = [];
   isNotAWord.value = false;
-  charStatuses.value = {};
-  currentWord.value = words[getRandomArbitrary(0, words.length - 1)];
-  hasGuessed.value = false;
+
+  if (fromCache !== true) {
+    guesses.value = [];
+    charStatuses.value = {};
+    currentWord.value = words[getRandomArbitrary(0, words.length - 1)];
+    hasGuessed.value = false;
+    saveData('');
+  }
 }
 
 watch(myGuess, () => {
@@ -127,6 +154,8 @@ const doGuess = (word: string) => {
     hasGuessed.value = true;
   }
 
+  saveData();
+
   myGuess.value = '';
 }
 
@@ -140,7 +169,7 @@ const getCellClassName = (rindex: number, cindex: number) => {
   return guess.info[cindex];
 }
 
-newGame();
+newGame(true);
 </script>
 
 <template lang="pug">
@@ -180,7 +209,7 @@ modal(v-if="currentModal" @close="onModalClose" :title="modalTitle")
       .result(v-if="!canGuess")
         .word {{ currentWord }}
 
-      .end-game(v-else)
+      .end-game(v-if="hasGameEnded")
         .action
           button(@click="newGame") Играть еще
 </template>
@@ -270,6 +299,8 @@ footer
   padding 20px 16px
 
   .end-game
+    margin-top 16px
+
     .action
       display flex
       justify-content center
