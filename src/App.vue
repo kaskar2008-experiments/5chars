@@ -63,9 +63,10 @@ const hasGuessed = ref(fromLS.hasGuessed || false);
 const charStatuses = ref<Record<string, string>>(fromLS.charStatuses || {});
 const canGuess = computed(() => guesses.value.length < 6);
 const hasGameEnded = computed(() => {
-  return !canGuess.value || hasGuessed.value;
+  return hasSurrendered.value || !canGuess.value || hasGuessed.value;
 });
 const isNotAWord = ref(false);
+const hasSurrendered = ref(false);
 
 const forLS = computed(() => {
   return {
@@ -92,6 +93,10 @@ const deleteCharGuess = () => {
   myGuess.value = myGuess.value.substring(0, myGuess.value.length - 1);
 }
 
+const doLose = () => {
+  hasSurrendered.value = true;
+}
+
 const newGame = (fromCache = false) => {
   myGuess.value = '';
   isNotAWord.value = false;
@@ -101,6 +106,7 @@ const newGame = (fromCache = false) => {
     charStatuses.value = {};
     currentWord.value = words[getRandomArbitrary(0, words.length - 1)];
     hasGuessed.value = false;
+    hasSurrendered.value = false;
     saveData('');
   }
 }
@@ -179,6 +185,7 @@ modal(v-if="currentModal" @close="onModalClose" :title="modalTitle")
   header
     game-logo(text="5chars")
     .actions
+      button(@click="doLose") Сдаюсь
       button(@click="openRulesModal") ?
   main
     .field
@@ -206,7 +213,7 @@ modal(v-if="currentModal" @close="onModalClose" :title="modalTitle")
               span ✕
 
     template(v-else)
-      .result(v-if="!canGuess")
+      .result(v-if="!canGuess || hasSurrendered")
         .word {{ currentWord }}
 
       .end-game(v-if="hasGameEnded")
@@ -234,6 +241,9 @@ header
   align-items center
 
   .actions
+    display flex
+    gap 15px
+
     button
       padding 8px 13px
       border none
