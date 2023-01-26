@@ -3,15 +3,15 @@
   "name": "Word game 5chars",
   "icons": [
     {
-      "src": "/favicon.svg",
+      "src": "favicon.svg",
       "type": "image/svg+xml",
       "sizes": "512x512"
     }
   ],
-  "id": "/?source=pwa",
-  "start_url": "/?source=pwa",
+  "id": "",
+  "start_url": "",
   "background_color": "#3367D6",
   "display": "standalone",
-  "scope": "/",
+  "scope": "",
   "theme_color": "#3367D6"
 }
