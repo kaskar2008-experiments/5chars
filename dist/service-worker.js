@@ -1,5 +1,5 @@
 const CACHE = "network-or-cache-v1";
-const timeout = 400;
+const timeout = 200;
 
 // при событии fetch, мы и делаем запрос, но используем кэш, только после истечения timeout.
 self.addEventListener("fetch", (event) => {
@@ -17,7 +17,10 @@ function fromNetwork(request, timeout) {
     var timeoutId = setTimeout(reject, timeout);
     fetch(request).then((response) => {
       clearTimeout(timeoutId);
-      fulfill(response);
+      caches
+        .open(CACHE)
+        .then((cache) => cache.add(request))
+        .then(() => fulfill(response));
     }, reject);
   });
 }

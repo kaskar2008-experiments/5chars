@@ -9,9 +9,9 @@
     }
   ],
   "id": "",
-  "start_url": "",
+  "start_url": "/5chars/dist/",
   "background_color": "#3367D6",
   "display": "standalone",
-  "scope": "",
+  "scope": "/5chars/dist/",
   "theme_color": "#3367D6"
 }
